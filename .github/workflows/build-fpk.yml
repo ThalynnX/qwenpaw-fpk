@@ -62,6 +62,13 @@ jobs:
             python3 -c "import json; json.load(open('$j'))" || { echo "Invalid JSON: $j"; exit 1; }
           done
 
+      - name: Build web console (预构建 Web 控制台)
+        run: |
+          cd app/qwenpaw/code/console
+          npm ci --no-audit --no-fund
+          npm run build
+          test -f dist/index.html && echo "console dist OK" || { echo "console build failed"; exit 1; }
+
       - name: Package app.tgz (source + ui + www)
         run: |
           tar -czf app.tgz -C app .
