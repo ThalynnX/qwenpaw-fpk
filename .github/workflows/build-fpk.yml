@@ -43,10 +43,12 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "源码版本: ${VERSION}"
 
-      - name: Update manifest version
+      - name: Update manifest version & info page
         run: |
           sed -i "s/^version[[:space:]]*=.*/version                    = ${VERSION}/" manifest
+          sed -i "s/<span class=\"badge\">v[^<]*<\/span>/<span class=\"badge\">v${VERSION}<\/span>/" app/www/index.html
           grep '^version' manifest
+          grep 'badge' app/www/index.html
 
       - name: Validate shell scripts
         run: |

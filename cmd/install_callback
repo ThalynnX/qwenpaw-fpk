@@ -2,7 +2,7 @@
 
 ### QwenPaw 安装回调：创建虚拟环境、安装依赖、初始化配置
 ### 依赖应用：python312（/var/apps/python312/target/bin/python3）、nodejs_v24
-### 与参考包（dustinky）同逻辑：宽容模式，任何中间步骤失败不中止安装
+### 与 ThalynnX 成品包同逻辑：宽容模式，任何中间步骤失败不中止安装
 
 PYTHON_BIN="/var/apps/python312/target/bin/python3"
 CODE_DIR="${TRIM_APPDEST}/qwenpaw/code"

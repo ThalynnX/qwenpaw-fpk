@@ -1,7 +1,7 @@
 appname                    = com.thalynnx.qwenpaw
 version                    = 2.2.3b1
 display_name               = QwenPaw
-desc                       = <p>QwenPaw 是 AgentScope 团队开源的本地优先个人 AI 助手（Apache-2.0），部署在你自己的环境中。</p><h3>核心功能</h3><p>多通道对话（飞书、钉钉、QQ、Discord、Telegram、微信等），多智能体协作（独立配置、记忆和技能，互相通信完成复杂任务），定时执行任务，能力由 Skills 决定且可无限扩展，支持对接本地 Ollama 完全离线工作，数据全在本地不依赖第三方托管，多层安全防护机制。<br>使用 Ollama 需先在飞牛应用商店安装 Ollama 应用。更多信息见 <a href="https://qwenpaw.agentscope.io" target="_blank">QwenPaw 官方文档</a>。</p>
+desc                       = <p>QwenPaw 是 AgentScope 团队开源的本地优先个人 AI 助手（Apache-2.0），本包由 <a href="https://github.com/ThalynnX/qwenpaw" target="_blank">ThalynnX</a> 基于 ThalynnX/qwenpaw 源码打包适配 fnOS，部署在你自己的环境中。</p><h3>核心功能</h3><p>多通道对话（飞书、钉钉、QQ、Discord、Telegram、微信等），多智能体协作（独立配置、记忆和技能，互相通信完成复杂任务），定时执行任务，能力由 Skills 决定且可无限扩展，支持对接本地 Ollama 完全离线工作，数据全在本地不依赖第三方托管，多层安全防护机制。<br>使用 Ollama 需先在飞牛应用商店安装 Ollama 应用。更多信息见 <a href="https://qwenpaw.agentscope.io" target="_blank">QwenPaw 官方文档</a>。</p>
 platform                   = all
 source                     = thirdparty
 maintainer                 = ThalynnX
