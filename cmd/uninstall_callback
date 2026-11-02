@@ -1,3 +1,17 @@
 #!/bin/bash
-# QwenPaw (ThalynnX/qwenpaw) — 生命周期占位脚本
+
+### 卸载回调：停止服务并清理应用目录运行时文件（保留用户数据目录 .qwenpaw）
+
+PID_FILE="${TRIM_PKGVAR}/qwenpaw.pid"
+if [ -f "${PID_FILE}" ]; then
+    pid=$(head -n 1 "${PID_FILE}" | tr -d '[:space:]')
+    if kill -0 "${pid}" 2>/dev/null; then
+        kill -TERM "${pid}" 2>/dev/null
+        sleep 2
+        kill -KILL "${pid}" 2>/dev/null
+    fi
+    rm -f "${PID_FILE}"
+fi
+
+echo "QwenPaw 已停止，用户数据保留在授权目录 .qwenpaw"
 exit 0

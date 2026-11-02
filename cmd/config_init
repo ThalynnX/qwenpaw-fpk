@@ -1,3 +1,5 @@
 #!/bin/bash
-# QwenPaw (ThalynnX/qwenpaw) — 生命周期占位脚本
+
+### 配置初始化：无额外操作
+
 exit 0

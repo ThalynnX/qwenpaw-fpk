@@ -1,116 +1,99 @@
 #!/bin/bash
-# QwenPaw (ThalynnX/qwenpaw) — 飞牛 fnOS 运行控制脚本
-#   main start   启动服务
-#   main stop    停止服务
-#   main status  0 = 运行中，3 = 未运行
 
-set -u
+### QwenPaw 生命周期管理主脚本（原生直装版）
+### 启动/停止/状态检查，进程以应用用户运行，日志与 PID 存于 var 目录
 
-APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-: "${TRIM_APPDEST:=${APP_ROOT}/target}"
-: "${TRIM_PKGETC:=${APP_ROOT}/etc}"
-: "${TRIM_PKGVAR:=${APP_ROOT}/var}"
-: "${TRIM_PKGHOME:=${TRIM_PKGVAR}/home}"
-: "${TRIM_TEMP_LOGFILE:=/dev/null}"
-export TRIM_APPDEST TRIM_PKGETC TRIM_PKGVAR TRIM_PKGHOME TRIM_TEMP_LOGFILE
+LOG_FILE="${TRIM_PKGVAR}/qwenpaw.log"
+PID_FILE="${TRIM_PKGVAR}/qwenpaw.pid"
 
-QWENPAW_COMMON=""
-for _p in "${TRIM_APPDEST}/fnos-common.sh" "${APP_ROOT}/app/fnos-common.sh" "${APP_ROOT}/fnos-common.sh"; do
-    if [ -r "${_p}" ]; then QWENPAW_COMMON="${_p}"; break; fi
-done
-if [ -n "${QWENPAW_COMMON}" ]; then
-    . "${QWENPAW_COMMON}"
-else
-    QWENPAW_VAR_DIR="${TRIM_PKGVAR}"
-    QWENPAW_VENV="${TRIM_PKGVAR}/venv"
-    QWENPAW_BIN="${TRIM_PKGVAR}/venv/bin/qwenpaw"
-    QWENPAW_PIDFILE="${TRIM_PKGVAR}/qwenpaw.pid"
-    QWENPAW_LOG="${TRIM_PKGVAR}/qwenpaw.log"
-    QWENPAW_HOME_DIR="${TRIM_PKGHOME:-${TRIM_PKGVAR}/home}"
-    QWENPAW_PORT="${TRIM_SERVICE_PORT:-8088}"
-    qwenpaw_log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >>"${QWENPAW_LOG}" 2>/dev/null; }
-    qwenpaw_fail() { qwenpaw_log "ERROR: $*"; echo "QwenPaw：$*" >&2; }
-    qwenpaw_log_level() { printf 'info'; }
-fi
+WORKING_DIR="${TRIM_PKGHOME}"
+VENV_DIR="${WORKING_DIR}/venv"
 
-pid_alive() { [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null; }
+LOG_LEVEL="${wizard_log_level:-info}"
 
-current_pid() {
-    [ -r "${QWENPAW_PIDFILE}" ] && head -n1 "${QWENPAW_PIDFILE}" | tr -d '[:space:]'
+export HOME="${TRIM_PKGETC}"
+export QWENPAW_WORKING_DIR="${TRIM_DATA_SHARE_PATHS%%:*}/.qwenpaw"
+export QWENPAW_LOG_LEVEL="${LOG_LEVEL}"
+export QWENPAW_AUTH_ENABLED=true
+# Node.js 运行时（依赖应用安装后挂载于该路径）
+export PATH="/var/apps/nodejs_v24/target/bin:$PATH"
+
+CMD="source ${VENV_DIR}/bin/activate && python3 -m qwenpaw app --host 0.0.0.0 --port ${TRIM_SERVICE_PORT:-19091}"
+
+log_msg() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> ${LOG_FILE}
 }
 
-start_process() {
-    local pid lvl
-    pid="$(current_pid)"
-    if pid_alive "${pid}"; then
-        qwenpaw_log "服务已在运行 (pid=${pid})"
+check_process() {
+    local pid=$1
+    if kill -0 "${pid}" 2>/dev/null; then
         return 0
-    fi
-    rm -f "${QWENPAW_PIDFILE}"
-
-    if [ ! -x "${QWENPAW_BIN}" ]; then
-        qwenpaw_fail "缺少可执行文件 ${QWENPAW_BIN}，请确认应用已安装完成"
+    else
         return 1
     fi
-
-    mkdir -p "${QWENPAW_VAR_DIR}" "${QWENPAW_HOME_DIR}" 2>/dev/null
-    touch "${QWENPAW_LOG}" 2>/dev/null
-
-    lvl="$(qwenpaw_log_level)"
-    qwenpaw_log "启动 QwenPaw (port=${QWENPAW_PORT}, log=${lvl})"
-
-    # QwenPaw 数据/配置统一放 HOME，保证可控
-    HOME="${QWENPAW_HOME_DIR}" "${QWENPAW_BIN}" app \
-        --host 127.0.0.1 --port "${QWENPAW_PORT}" --log-level "${lvl}" \
-        >>"${QWENPAW_LOG}" 2>&1 &
-
-    printf '%s' "$!" > "${QWENPAW_PIDFILE}"
-    sleep 2
-    if pid_alive "$!"; then
-        qwenpaw_log "QwenPaw 已启动 (pid=$!)"
-        return 0
-    fi
-    qwenpaw_fail "QwenPaw 启动失败，请查看日志 ${QWENPAW_LOG}"
-    return 1
-}
-
-stop_process() {
-    local pid count
-    qwenpaw_log "停止 QwenPaw ..."
-    pid="$(current_pid)"
-    if [ -z "${pid}" ]; then
-        rm -f "${QWENPAW_PIDFILE}"
-        return 0
-    fi
-    if ! pid_alive "${pid}"; then
-        rm -f "${QWENPAW_PIDFILE}"
-        qwenpaw_log "进程不存在，清理 pid 文件"
-        return 0
-    fi
-
-    kill -TERM "${pid}" >>"${QWENPAW_LOG}" 2>&1
-    count=0
-    while pid_alive "${pid}" && [ "${count}" -lt 15 ]; do
-        sleep 1
-        count=$((count + 1))
-    done
-    if pid_alive "${pid}"; then
-        kill -KILL "${pid}" 2>/dev/null
-        sleep 1
-    fi
-    rm -f "${QWENPAW_PIDFILE}"
-    qwenpaw_log "QwenPaw 已停止"
-    return 0
 }
 
 status() {
-    local pid
-    pid="$(current_pid)"
-    if pid_alive "${pid}"; then
+    if [ -f "${PID_FILE}" ]; then
+        pid=$(head -n 1 "${PID_FILE}" | tr -d '[:space:]')
+        if check_process "${pid}"; then
+            return 0
+        else
+            rm -f "${PID_FILE}"
+        fi
+    fi
+    return 1
+}
+
+start_process() {
+    if status; then
         return 0
     fi
-    rm -f "${QWENPAW_PIDFILE}"
-    return 1
+
+    if [ ! -d "${VENV_DIR}" ]; then
+        log_msg "ERROR: venv not found at ${VENV_DIR}, please reinstall the app."
+        return 1
+    fi
+
+    log_msg "Starting QwenPaw ..."
+    bash -c "${CMD}" >> ${LOG_FILE} 2>&1 &
+    printf "%s" "$!" > ${PID_FILE}
+    return 0
+}
+
+stop_process() {
+    log_msg "Stopping QwenPaw ..."
+
+    if [ -r "${PID_FILE}" ]; then
+        pid=$(head -n 1 "${PID_FILE}" | tr -d '[:space:]')
+
+        if ! check_process "${pid}"; then
+            rm -f "${PID_FILE}"
+            log_msg "remove stale pid file"
+            return 0
+        fi
+
+        log_msg "send TERM signal to PID:${pid}..."
+        kill -TERM "${pid}" >> ${LOG_FILE} 2>&1
+
+        local count=0
+        while check_process "${pid}" && [ $count -lt 10 ]; do
+            sleep 1
+            count=$((count + 1))
+            log_msg "waiting process terminal... (${count}s/10s)"
+        done
+
+        if check_process "${pid}"; then
+            log_msg "send KILL signal to PID:${pid}..."
+            kill -KILL "${pid}"
+            sleep 1
+        else
+            log_msg "process killed"
+        fi
+        rm -f "${PID_FILE}"
+    fi
+
+    return 0
 }
 
 case $1 in
@@ -121,7 +104,11 @@ stop)
     stop_process
     ;;
 status)
-    if status; then exit 0; else exit 3; fi
+    if status; then
+        exit 0
+    else
+        exit 3
+    fi
     ;;
 *)
     exit 1

@@ -1,7 +1,10 @@
-name: Build QwenPaw FPK
+name: Build QwenPaw FPK (com.thalynnx.qwenpaw)
 
 on:
   workflow_dispatch:
+  schedule:
+    # 每日 03:00(UTC) / 11:00(北京时间) 自动拉取最新源码编译
+    - cron: '0 3 * * *'
   push:
     branches: [ main ]
     paths:
@@ -12,6 +15,7 @@ on:
       - 'app/**'
       - 'ICON.PNG'
       - 'ICON_256.PNG'
+      - 'LICENSE'
     tags:
       - 'v*'
 
@@ -22,7 +26,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout build repo
         uses: actions/checkout@v4
 
       - name: Download fnpack
@@ -31,36 +35,68 @@ jobs:
           chmod +x /usr/local/bin/fnpack
           fnpack --help
 
+      - name: Fetch latest qwenpaw source from ThalynnX/qwenpaw
+        run: |
+          git clone --depth 1 https://github.com/ThalynnX/qwenpaw.git app/qwenpaw/code
+          rm -rf app/qwenpaw/code/.git app/qwenpaw/code/e2e app/qwenpaw/code/.github
+          VERSION=$(grep '__version__' app/qwenpaw/code/src/qwenpaw/__version__.py | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "源码版本: ${VERSION}"
+
+      - name: Update manifest version
+        run: |
+          sed -i "s/^version[[:space:]]*=.*/version                    = ${VERSION}/" manifest
+          grep '^version' manifest
+
       - name: Validate shell scripts
         run: |
-          for f in cmd/* app/*.sh; do
+          for f in cmd/* app/ui/index.cgi; do
             bash -n "$f" || { echo "Syntax error: $f"; exit 1; }
           done
 
       - name: Validate JSON
         run: |
-          for j in config/privilege config/resource app/ui/config wizard/install; do
-            python3 -c "import json,sys; json.load(open('$j'))" || { echo "Invalid JSON: $j"; exit 1; }
+          for j in config/privilege config/resource app/ui/config; do
+            python3 -c "import json; json.load(open('$j'))" || { echo "Invalid JSON: $j"; exit 1; }
           done
+
+      - name: Package app.tgz (source + ui + www)
+        run: |
+          tar -czf app.tgz -C app .
+          ls -la app.tgz
 
       - name: Build FPK
         run: fnpack build
 
       - name: Verify artifact
         run: |
-          test -f qwenpaw.fpk
-          echo "fpk OK, size:"
-          ls -la qwenpaw.fpk
+          test -f com.thalynnx.qwenpaw.fpk
+          echo "fpk OK:"
+          ls -la com.thalynnx.qwenpaw.fpk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qwenpaw-fpk
-          path: qwenpaw.fpk
+          name: com.thalynnx.qwenpaw-fpk
+          path: com.thalynnx.qwenpaw.fpk
 
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: qwenpaw.fpk
-          generate_release_notes: true
+          tag_name: v${VERSION}
+          files: com.thalynnx.qwenpaw.fpk
+          name: QwenPaw v${VERSION} (fnOS fpk)
+          body: |
+            基于 ThalynnX/qwenpaw 源码自动编译的飞牛 fnOS 原生应用（非 Docker）。
+
+            ## 安装
+            - 在飞牛应用商店手动安装本 fpk，或通过商店导入。
+            - 安装时自动创建 Python 虚拟环境并从本地源码安装依赖（无需联网拉源码）。
+            - 依赖飞牛应用商店的 **Node.js v24** 与 **Python 3.12** 运行时（自动安装）。
+
+            ## 说明
+            - 应用标识：com.thalynnx.qwenpaw，独立应用，不影响社区包。
+            - Web 控制台：安装后从应用中心「QwenPaw」入口打开（http://NAS:19091）。
+            - 数据保存在授权目录 .qwenpaw，卸载保留。
+          generate_release_notes: false
+          fail_on_unmatched_files: true

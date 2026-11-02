@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QwenPaw - 飞牛原生版</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: #f5f7fa; color: #1f2329; line-height: 1.7; padding: 2rem 1rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #171a1f; color: #e8eaed; }
+    .card { background: #1f242b; border-color: #2b313a; }
+    code { background: #2b313a; }
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  .card {
+    background: #fff; border: 1px solid #e5e8eb; border-radius: 12px;
+    padding: 1.8rem 2rem; margin-bottom: 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  h1 { font-size: 1.5rem; margin-bottom: .4rem; }
+  h2 { font-size: 1.1rem; margin: 1.2rem 0 .6rem; }
+  p  { margin: .4rem 0; }
+  code {
+    background: #f0f2f5; padding: .15rem .45rem; border-radius: 4px;
+    font-size: .92em; font-family: "SF Mono", Consolas, monospace;
+  }
+  .badge {
+    display: inline-block; padding: .15rem .6rem; border-radius: 999px;
+    background: #e8f3ff; color: #1664ff; font-size: .8rem; margin-left: .4rem;
+  }
+  ul { margin: .4rem 0 .4rem 1.2rem; }
+  a { color: #1664ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .footer { text-align: center; color: #98a2ad; font-size: .85rem; margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>QwenPaw <span class="badge">v2.2.2</span></h1>
+    <p>本地优先的个人 AI 助手 · 飞牛 fnOS 原生直装版（非 Docker）</p>
+    <p>由 AgentScope 团队开源（Apache-2.0），本应用由 Doubao 打包适配 fnOS。</p>
+  </div>
+
+  <div class="card">
+    <h2>功能概览</h2>
+    <ul>
+      <li>多通道对话：钉钉、飞书、QQ、Discord、Telegram 等</li>
+      <li>多智能体协作：独立配置、记忆与技能，互相通信完成复杂任务</li>
+      <li>定时任务与 Skills 扩展，能力可无限扩展</li>
+      <li>支持对接本地 Ollama，完全离线工作</li>
+      <li>数据全在本地，不依赖第三方托管</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>开始使用</h2>
+    <p><strong>Web 控制台：</strong>点击应用中心中「QwenPaw」入口即可打开（地址 <code>http://NAS:19091</code>）。</p>
+    <p><strong>初始化：</strong>安装时已自动执行 <code>qwenpaw init</code>，默认配置可直接使用；如需修改渠道与模型，
+       在 NAS 终端执行：</p>
+    <p><code>docker</code> 无需——直接进入应用目录：<code>cd /var/apps/com.thalynnx.qwenpaw/target && sudo -u &lt;app用户&gt; /bin/bash -c "source ../home/venv/bin/activate &amp;&amp; python3 -m qwenpaw init"</code></p>
+    <p><strong>模型对接：</strong>Ollama 请先在应用商店安装 Ollama 应用，然后在控制台配置模型地址。</p>
+    <p><strong>数据位置：</strong>授权目录下的 <code>.qwenpaw</code>（卸载保留，重装可恢复）。</p>
+  </div>
+
+  <div class="card">
+    <h2>相关链接</h2>
+    <ul>
+      <li>项目主页：<a href="https://github.com/agentscope-ai/QwenPaw" target="_blank">github.com/agentscope-ai/QwenPaw</a></li>
+      <li>官方文档：<a href="https://qwenpaw.agentscope.io" target="_blank">qwenpaw.agentscope.io</a></li>
+    </ul>
+  </div>
+
+  <div class="footer">本应用为社区适配包，与飞牛官方无关；使用问题请优先查阅 QwenPaw 官方文档。</div>
+</div>
+</body>
+</html>

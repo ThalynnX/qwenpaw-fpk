@@ -1,46 +1,119 @@
 [
     {
-        "stepTitle": "安装设置",
+        "stepTitle": "欢迎使用 QwenPaw",
         "items": [
             {
                 "type": "tips",
-                "helpText": "QwenPaw 将基于 https://github.com/ThalynnX/qwenpaw 仓库源码安装：拉取源码 → 创建 Python 虚拟环境 → 安装依赖（PyPI）。依赖较多，安装耗时可能较长，进度条停滞属正常现象，请耐心等待。"
+                "helpText": "QwenPaw 是一款本地优先的个人 AI 助手，支持多通道对话（钉钉、飞书、QQ、Discord、Telegram 等）、多智能体协作、定时执行任务，能力由 Skills 决定且可无限扩展，支持对接本地 Ollama 完全离线工作。"
+            },
+            {
+                "type": "tips",
+                "helpText": "数据全在本地，不依赖第三方托管。由 AgentScope 团队基于 AgentScope、AgentScope Runtime 与 ReMe 构建，Apache-2.0 开源。"
+            },
+            {
+                "type": "tips",
+                "helpText": "请阅读 <a target=\"_blank\" href=\"https://github.com/agentscope-ai/QwenPaw\">项目主页</a> 与 <a target=\"_blank\" href=\"https://qwenpaw.agentscope.io\">官方文档</a> 了解更多信息。"
+            }
+        ]
+    },
+    {
+        "stepTitle": "安装注意事项",
+        "items": [
+            {
+                "type": "tips",
+                "helpText": "1. 本应用为原生直装版（非 Docker），安装时自动创建 Python 虚拟环境并安装依赖，需要连接 PyPI，耗时与网络环境有关。"
+            },
+            {
+                "type": "tips",
+                "helpText": "2. 依赖飞牛应用商店的 <b>Node.js v24</b> 与 <b>Python 3.12</b> 运行时，安装时若未安装会自动安装。"
+            },
+            {
+                "type": "tips",
+                "helpText": "3. 安装完成后可在 Web 控制台中按需安装 <b>Ollama 驱动</b> 和 <b>Playwright</b> 等可选组件；使用 Ollama 请先在应用商店安装 <b>Ollama</b> 应用。"
+            },
+            {
+                "type": "tips",
+                "helpText": "<strong>耗时说明：</strong>本应用依赖较多（约 1GB，含 onnxruntime/transformers/modelscope 等），安装阶段下载 + 安装通常需要 10-30 分钟，进度请以安装日志为准：<code>安装日志位于应用 var 目录 qwenpaw-install.log</code>，进度实时写入，并非卡死。"
+            },
+            {
+                "type": "tips",
+                "helpText": "4. 数据保存在授权目录下（.qwenpaw），卸载不删除，重装可恢复。"
+            }
+        ]
+    },
+    {
+        "stepTitle": "安装源设置",
+        "items": [
+            {
+                "type": "tips",
+                "helpText": "选择 PyPI 安装源，如果您的网络环境连接官方源较慢，建议选择清华源。"
             },
             {
                 "type": "select",
-                "field": "wizard_pypi_source",
+                "field": "wizard_pypi_mirror",
                 "label": "PyPI 安装源",
-                "helpText": "pip 安装依赖时使用的软件源，国内网络建议选择镜像源。",
-                "initValue": "aliyun",
+                "initValue": "tsinghua",
                 "options": [
+                    {
+                        "label": "PyPI 官方源 (国内用户推荐使用其他镜像源)",
+                        "value": "official"
+                    },
+                    {
+                        "label": "清华大学镜像源",
+                        "value": "tsinghua"
+                    },
                     {
                         "label": "阿里云镜像源",
                         "value": "aliyun"
                     },
                     {
-                        "label": "清华大学镜像源",
-                        "value": "tuna"
-                    },
+                        "label": "中科大镜像源",
+                        "value": "ustc"
+                    }
+                ],
+                "rules": [
                     {
-                        "label": "官方源（PyPI）",
-                        "value": "official"
+                        "required": true,
+                        "message": "请选择安装源"
                     }
                 ]
+            }
+        ]
+    },
+    {
+        "stepTitle": "日志级别",
+        "items": [
+            {
+                "type": "tips",
+                "helpText": "选择日志级别，这将影响日志输出的详细程度。"
             },
             {
                 "type": "select",
                 "field": "wizard_log_level",
                 "label": "日志级别",
-                "helpText": "QwenPaw 运行日志的输出详细程度。",
                 "initValue": "info",
                 "options": [
                     {
-                        "label": "Info - 常规信息（推荐）",
+                        "label": "Info - 常规信息 (推荐)",
                         "value": "info"
                     },
                     {
                         "label": "Debug - 调试信息",
                         "value": "debug"
+                    },
+                    {
+                        "label": "Warning - 警告信息",
+                        "value": "warning"
+                    },
+                    {
+                        "label": "Error - 错误信息",
+                        "value": "error"
+                    }
+                ],
+                "rules": [
+                    {
+                        "required": true,
+                        "message": "请选择日志级别"
                     }
                 ]
             }

@@ -1,0 +1,15 @@
+[
+    {
+        "stepTitle": "卸载确认",
+        "items": [
+            {
+                "type": "tips",
+                "helpText": "卸载将停止 QwenPaw 服务并移除应用文件，但会保留授权目录下的用户数据（.qwenpaw），重新安装后数据仍在。"
+            },
+            {
+                "type": "tips",
+                "helpText": "如需彻底删除用户数据，请卸载后手动删除授权目录中的 .qwenpaw 文件夹。"
+            }
+        ]
+    }
+]

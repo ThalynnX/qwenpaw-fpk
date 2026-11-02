@@ -1,3 +1,16 @@
 #!/bin/bash
-# QwenPaw (ThalynnX/qwenpaw) — 生命周期占位脚本
+
+### 安装前检查：确认依赖运行时存在
+PYTHON_BIN="/var/apps/python312/target/bin/python3"
+NODE_BIN="/var/apps/nodejs_v24/target/bin/node"
+
+if [ ! -x "${PYTHON_BIN}" ]; then
+    echo "[install_init] WARNING: python312 runtime not found at ${PYTHON_BIN}"
+    echo "[install_init] The app depends on store apps nodejs_v24:python312."
+fi
+
+if [ ! -x "${NODE_BIN}" ]; then
+    echo "[install_init] WARNING: nodejs_v24 runtime not found at ${NODE_BIN}"
+fi
+
 exit 0

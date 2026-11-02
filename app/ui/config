@@ -1,13 +1,20 @@
 {
     ".url": {
-        "qwenpaw.Application": {
+        "com.thalynnx.qwenpaw.main": {
             "title": "QwenPaw",
-            "icon": "images/icon_256.png",
-            "type": "url",
+            "icon": "images/icon_{0}.png",
+            "type": "iframe",
             "protocol": "http",
-            "port": "8088",
-            "url": "/",
-            "allUsers": false
+            "port": "19091",
+            "allUsers": true
+        },
+        "com.thalynnx.qwenpaw.console": {
+            "title": "QwenPaw信息",
+            "icon": "images/console_{0}.png",
+            "type": "iframe",
+            "protocol": "http",
+            "url": "/cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi/",
+            "allUsers": true
         }
     }
 }

@@ -1,140 +1,93 @@
 #!/bin/bash
-# QwenPaw (ThalynnX/qwenpaw) — 飞牛 fnOS 安装回调
-# 流程：拉取 https://github.com/ThalynnX/qwenpaw 源码 → 创建 Python venv →
-#       pip 安装依赖（可选镜像源）→ 生成默认配置
-# 向导变量：wizard_pypi_source (tuna/aliyun/official)、wizard_log_level (info/debug)
 
-set -u
+### QwenPaw 安装回调：创建虚拟环境、安装依赖、初始化配置
+### 依赖应用：python312（/var/apps/python312/target/bin/python3）、nodejs_v24
+### 与参考包（dustinky）同逻辑：宽容模式，任何中间步骤失败不中止安装
 
-APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-: "${TRIM_APPDEST:=${APP_ROOT}/target}"
-: "${TRIM_PKGETC:=${APP_ROOT}/etc}"
-: "${TRIM_PKGVAR:=${APP_ROOT}/var}"
-: "${TRIM_PKGHOME:=${TRIM_PKGVAR}/home}"
-: "${TRIM_TEMP_LOGFILE:=/dev/null}"
-export TRIM_APPDEST TRIM_PKGETC TRIM_PKGVAR TRIM_PKGHOME TRIM_TEMP_LOGFILE
+PYTHON_BIN="/var/apps/python312/target/bin/python3"
+CODE_DIR="${TRIM_APPDEST}/qwenpaw/code"
+WORKING_DIR="${TRIM_PKGHOME}"
+VENV_DIR="${WORKING_DIR}/venv"
 
-QWENPAW_COMMON=""
-for _p in "${TRIM_APPDEST}/fnos-common.sh" "${APP_ROOT}/app/fnos-common.sh" "${APP_ROOT}/fnos-common.sh"; do
-    if [ -r "${_p}" ]; then QWENPAW_COMMON="${_p}"; break; fi
-done
-if [ -n "${QWENPAW_COMMON}" ]; then
-    . "${QWENPAW_COMMON}"
-else
-    QWENPAW_VAR_DIR="${TRIM_PKGVAR}"
-    QWENPAW_VENV="${TRIM_PKGVAR}/venv"
-    QWENPAW_SOURCE="${TRIM_PKGVAR}/source/qwenpaw"
-    QWENPAW_HOME_DIR="${TRIM_PKGHOME:-${TRIM_PKGVAR}/home}"
-    qwenpaw_fail() { echo "QwenPaw：$*" >&2; }
-    qwenpaw_log() { :; }
-fi
+export HOME="${WORKING_DIR}"
+export QWENPAW_WORKING_DIR="${TRIM_DATA_SHARE_PATHS%%:*}/.qwenpaw"
+LOG_FILE="${TRIM_PKGVAR}/qwenpaw-install.log"
 
-install_log() {
-    local f="${QWENPAW_VAR_DIR}/install.log"
-    mkdir -p "$(dirname "${f}")" 2>/dev/null
-    printf '%s %s\n' "$(date '+%F %T')" "$*" >>"${f}" 2>/dev/null
+log_msg() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "${LOG_FILE}" 2>/dev/null || true
 }
 
-REPO_URL="https://github.com/ThalynnX/qwenpaw"
-PYPI_TUNA="https://pypi.tuna.tsinghua.edu.cn/simple"
-PYPI_ALIYUN="https://mirrors.aliyun.com/pypi/simple/"
+chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME}" "${WORKING_DIR}" 2>/dev/null || true
+chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME}" "${TRIM_PKGVAR}" 2>/dev/null || true
+chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME}" "${TRIM_PKGETC}" 2>/dev/null || true
+chmod -R 755 "${WORKING_DIR}" 2>/dev/null || true
+chmod -R 755 "${TRIM_PKGVAR}" 2>/dev/null || true
+chmod -R 755 "${TRIM_PKGETC}" 2>/dev/null || true
 
-# 向导值（默认：阿里云源 + info）
-PYPISRC="${wizard_pypi_source:-aliyun}"
-LOGLEVEL="${wizard_log_level:-info}"
-case "${PYPISRC}" in
-    tuna)      PIP_INDEX="--index-url ${PYPI_TUNA}" ;;
-    official)  PIP_INDEX="" ;;
-    *)         PYPISRC="aliyun"; PIP_INDEX="--index-url ${PYPI_ALIYUN}" ;;
-esac
-case "${LOGLEVEL}" in
-    debug|warning|error) : ;;
-    *) LOGLEVEL="info" ;;
-esac
+MARKER="${TRIM_PKGHOME}/.qwenpaw_keep_runtime"
+if [ -f "${MARKER}" ]; then
+    log_msg "检测到保留运行环境标记，跳过安装，仅修正权限"
+    exit 0
+fi
 
-install_log "==== QwenPaw 安装开始 ===="
-install_log "PyPI 源: ${PYPISRC} | 日志级别: ${LOGLEVEL}"
+log_msg "开始安装 QwenPaw..."
 
-# 1. 检查 python3
-PY=""
-for c in python3.12 python3.11 python3; do
-    if command -v "${c}" >/dev/null 2>&1; then
-        PY="$(command -v "${c}")"
-        break
-    fi
-done
-if [ -z "${PY}" ]; then
-    qwenpaw_fail "未检测到 Python 3.11+，请在飞牛系统中安装 Python 后重试"
+log_msg "正在创建虚拟环境..."
+"${PYTHON_BIN}" -m venv "${VENV_DIR}"
+log_msg "虚拟环境 ${VENV_DIR} 创建成功"
+log_msg "正在设置虚拟环境权限..."
+chmod -R 755 "${VENV_DIR}" 2>/dev/null || true
+log_msg "虚拟环境 ${VENV_DIR} 权限设置成功"
+
+log_msg "正在激活虚拟环境..."
+source "${VENV_DIR}/bin/activate"
+log_msg "虚拟环境激活成功"
+
+PYPI_MIRROR="${wizard_pypi_mirror:-tsinghua}"
+PIP_OPTS=""
+
+if [ "$PYPI_MIRROR" = "tsinghua" ]; then
+    log_msg "使用清华源安装"
+    PIP_OPTS="-i https://pypi.tuna.tsinghua.edu.cn/simple"
+elif [ "$PYPI_MIRROR" = "aliyun" ]; then
+    log_msg "使用阿里云源安装"
+    PIP_OPTS="-i https://mirrors.aliyun.com/pypi/simple/"
+elif [ "$PYPI_MIRROR" = "ustc" ]; then
+    log_msg "使用中科大源安装"
+    PIP_OPTS="-i https://pypi.mirrors.ustc.edu.cn/simple/"
+fi
+
+# 防连接卡死：超时/重试/禁交互（不改变失败语义）
+PIP_SAFE="--timeout 30 --retries 3 --no-input"
+
+log_msg "正在升级虚拟环境 pip..."
+python3 -m pip install --upgrade pip $PIP_SAFE $PIP_OPTS
+log_msg "虚拟环境 pip 升级成功"
+
+cd "${CODE_DIR}"
+
+log_msg "正在安装 QwenPaw (源码模式)..."
+PIP_LOG=$(mktemp)
+if ! pip3 install $PIP_SAFE -e . $PIP_OPTS > "${PIP_LOG}" 2>&1; then
+    cat "${PIP_LOG}" >> "${LOG_FILE}" 2>/dev/null || true
+    ERROR_MSG=$(tail -n 1 "${PIP_LOG}")
+    rm -f "${PIP_LOG}"
+    log_msg "pip 安装失败: ${ERROR_MSG}"
     exit 1
 fi
-PYV="$("${PY}" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)"
-install_log "检测到 Python: ${PY} (${PYV})"
-PYMAJ="${PYV%%.*}"; PYMIN="${PYV#*.}"; PYMIN="${PYMIN%%.*}"
-if [ "${PYMAJ}" -lt 3 ] || { [ "${PYMAJ}" -eq 3 ] && [ "${PYMIN}" -lt 11 ]; }; then
-    qwenpaw_fail "QwenPaw 需要 Python >= 3.11, < 3.14，当前为 ${PYV}"
-    exit 1
-fi
-if [ "${PYMAJ}" -eq 3 ] && [ "${PYMIN}" -ge 14 ]; then
-    qwenpaw_fail "QwenPaw 需要 Python < 3.14，当前为 ${PYV}"
-    exit 1
-fi
+cat "${PIP_LOG}" >> "${LOG_FILE}" 2>/dev/null || true
+rm -f "${PIP_LOG}"
+log_msg "QwenPaw 依赖安装完成"
 
-# 2. 检查 git
-if ! command -v git >/dev/null 2>&1; then
-    qwenpaw_fail "未检测到 git，请先在飞牛系统中安装 git"
-    exit 1
-fi
+log_msg "正在初始化 QwenPaw..."
+echo "Yes" | python3 -m qwenpaw init --defaults
 
-mkdir -p "${QWENPAW_VAR_DIR}/source" "${QWENPAW_VENV}" "${QWENPAW_HOME_DIR}" "${QWENPAW_ETC_DIR}" 2>/dev/null
+chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME}" "${WORKING_DIR}" 2>/dev/null || true
+chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME}" "${TRIM_PKGVAR}" 2>/dev/null || true
+chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME}" "${TRIM_PKGETC}" 2>/dev/null || true
+chmod -R 755 "${WORKING_DIR}" 2>/dev/null || true
+chmod -R 755 "${TRIM_PKGVAR}" 2>/dev/null || true
+chmod -R 755 "${TRIM_PKGETC}" 2>/dev/null || true
 
-# 3. 拉取用户仓库源码
-install_log "拉取源码: ${REPO_URL}"
-if [ -d "${QWENPAW_SOURCE}/.git" ]; then
-    ( cd "${QWENPAW_SOURCE}" && git fetch --depth 1 origin main 2>>"${QWENPAW_VAR_DIR}/install.log" && git reset --hard origin/main ) \
-        || install_log "源码更新失败，沿用现有源码"
-else
-    rm -rf "${QWENPAW_SOURCE}"
-    if ! git clone --depth 1 --branch main "${REPO_URL}" "${QWENPAW_SOURCE}" >>"${QWENPAW_VAR_DIR}/install.log" 2>&1; then
-        qwenpaw_fail "源码拉取失败：无法访问 ${REPO_URL}，请检查网络"
-        exit 1
-    fi
-fi
-install_log "源码就绪: ${QWENPAW_SOURCE}"
-
-# 4. 创建虚拟环境
-if [ ! -x "${QWENPAW_VENV}/bin/python" ]; then
-    install_log "创建虚拟环境 ..."
-    rm -rf "${QWENPAW_VENV}"
-    if ! "${PY}" -m venv "${QWENPAW_VENV}" >>"${QWENPAW_VAR_DIR}/install.log" 2>&1; then
-        qwenpaw_fail "虚拟环境创建失败（需要 python3-venv，请先安装）"
-        exit 1
-    fi
-fi
-VENV_PY="${QWENPAW_VENV}/bin/python"
-VENV_PIP="${QWENPAW_VENV}/bin/pip"
-install_log "升级 pip ..."
-"${VENV_PY}" -m pip install -U pip setuptools wheel ${PIP_INDEX} >>"${QWENPAW_VAR_DIR}/install.log" 2>&1 || true
-
-# 5. 安装 QwenPaw 及依赖（耗时较长，属正常现象）
-install_log "安装 QwenPaw 依赖（${PYPISRC}），耗时较长请耐心等待 ..."
-if ! "${VENV_PY}" -m pip install --no-cache-dir ${PIP_INDEX} "${QWENPAW_SOURCE}" >>"${QWENPAW_VAR_DIR}/install.log" 2>&1; then
-    qwenpaw_fail "依赖安装失败，请查看安装日志 ${QWENPAW_VAR_DIR}/install.log"
-    exit 1
-fi
-install_log "依赖安装完成"
-
-# 6. 保存配置（供 cmd/main 读取）
-cat > "${QWENPAW_ETC_FILE}" <<EOF
-LOG_LEVEL=${LOGLEVEL}
-PYPI_SOURCE=${PYPISRC}
-QWENPAW_VERSION=$("${QWENPAW_VENV}/bin/qwenpaw" --version 2>/dev/null || echo "unknown")
-INSTALLED_AT=$(date '+%F %T')
-EOF
-
-# 7. 生成默认配置（非交互）
-install_log "生成默认配置 (qwenpaw init --defaults) ..."
-HOME="${QWENPAW_HOME_DIR}" "${QWENPAW_VENV}/bin/qwenpaw" init --defaults --accept-security \
-    >>"${QWENPAW_VAR_DIR}/install.log" 2>&1 || true
-
-install_log "==== QwenPaw 安装完成 ===="
+log_msg "QwenPaw 安装成功！"
 exit 0

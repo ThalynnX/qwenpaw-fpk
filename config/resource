@@ -1,9 +1,14 @@
 {
-  "data-share": {
-    "shares": [
-      {
-        "name": "qwenpaw"
-      }
-    ]
-  }
+    "data-share": {
+        "shares": [
+            {
+                "name": "com.thalynnx.qwenpaw",
+                "permission": {
+                    "rw": [
+                        "com.thalynnx.qwenpaw"
+                    ]
+                }
+            }
+        ]
+    }
 }

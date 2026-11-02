@@ -1,4 +1,11 @@
+# 构建产物
+*.fpk
+app.tgz
+*.log
+
+# 源码目录（由 CI 从 ThalynnX/qwenpaw 拉取，不提交）
+app/qwenpaw/
+
+# 系统/编辑器
 .DS_Store
 *.tmp
-*.log
-install.log

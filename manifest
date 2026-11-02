@@ -1,18 +1,19 @@
-appname = qwenpaw
-version = 2.2.3b1
-display_name = QwenPaw
-desc = 你的专属 AI 助理，部署在你自己（飞牛 fnOS / RK3566 ARM）的环境中。支持微信、QQ、钉钉、飞书、Discord、Telegram 等多通道对话，多智能体协作（独立配置、记忆和技能，互相通信完成复杂任务），定时执行任务，能力由 Skills 决定且可无限扩展，支持本地运行大模型完全离线工作，数据全在本地不依赖第三方托管，多层安全防护机制。<br>本应用基于 <a href="https://github.com/ThalynnX/qwenpaw">https://github.com/ThalynnX/qwenpaw</a> 仓库源码构建（源自 QwenPaw / Apache-2.0），由 ThalynnX 发布。<br>说明：安装时会联网拉取 Python 依赖（PyPI），耗时较长属正常现象；使用 Ollama 本地模型请先在飞牛应用商店安装 Ollama。
-platform = arm
-source = thirdparty
-os_min_version = 1.1.8
-maintainer = ThalynnX
-maintainer_url = https://github.com/ThalynnX/qwenpaw
-distributor = ThalynnX
-distributor_url = https://github.com/ThalynnX/qwenpaw
-desktop_uidir = ui
-desktop_applaunchname = qwenpaw.Application
-service_port = 8088
-checkport = true
-ctl_stop = true
-disable_authorization_path = true
-changelog = v2.2.3b1 基于 ThalynnX/qwenpaw 仓库源码构建的飞牛 fnOS 原生应用，适配 ARM（RK3566）。安装向导可选 PyPI 镜像源与日志级别。
+appname                    = com.thalynnx.qwenpaw
+version                    = 2.2.3b1
+display_name               = QwenPaw
+desc                       = <p>QwenPaw 是 AgentScope 团队开源的本地优先个人 AI 助手（Apache-2.0），部署在你自己的环境中。</p><h3>核心功能</h3><p>多通道对话（飞书、钉钉、QQ、Discord、Telegram、微信等），多智能体协作（独立配置、记忆和技能，互相通信完成复杂任务），定时执行任务，能力由 Skills 决定且可无限扩展，支持对接本地 Ollama 完全离线工作，数据全在本地不依赖第三方托管，多层安全防护机制。<br>使用 Ollama 需先在飞牛应用商店安装 Ollama 应用。更多信息见 <a href="https://qwenpaw.agentscope.io" target="_blank">QwenPaw 官方文档</a>。</p>
+platform                   = all
+source                     = thirdparty
+maintainer                 = ThalynnX
+maintainer_url             = https://github.com/ThalynnX/qwenpaw
+distributor                = ThalynnX
+distributor_url            = https://github.com/ThalynnX/qwenpaw
+desktop_uidir              = ui
+os_min_version             = 0.9.21
+desktop_applaunchname      = com.thalynnx.qwenpaw.main
+checkport                  = false
+service_port               = 19091
+disable_authorization_path = false
+install_dep_apps           = nodejs_v24:python312
+changelog                  = 基于 ThalynnX/qwenpaw v2.2.3b1 源码自动编译（原生直装，非 Docker）。独立应用标识，不影响社区包。
+checksum                   = 0f35001076c6b8423924e19d919c6fc0
