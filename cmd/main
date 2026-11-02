@@ -1,0 +1,129 @@
+#!/bin/bash
+# QwenPaw (ThalynnX/qwenpaw) — 飞牛 fnOS 运行控制脚本
+#   main start   启动服务
+#   main stop    停止服务
+#   main status  0 = 运行中，3 = 未运行
+
+set -u
+
+APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+: "${TRIM_APPDEST:=${APP_ROOT}/target}"
+: "${TRIM_PKGETC:=${APP_ROOT}/etc}"
+: "${TRIM_PKGVAR:=${APP_ROOT}/var}"
+: "${TRIM_PKGHOME:=${TRIM_PKGVAR}/home}"
+: "${TRIM_TEMP_LOGFILE:=/dev/null}"
+export TRIM_APPDEST TRIM_PKGETC TRIM_PKGVAR TRIM_PKGHOME TRIM_TEMP_LOGFILE
+
+QWENPAW_COMMON=""
+for _p in "${TRIM_APPDEST}/fnos-common.sh" "${APP_ROOT}/app/fnos-common.sh" "${APP_ROOT}/fnos-common.sh"; do
+    if [ -r "${_p}" ]; then QWENPAW_COMMON="${_p}"; break; fi
+done
+if [ -n "${QWENPAW_COMMON}" ]; then
+    . "${QWENPAW_COMMON}"
+else
+    QWENPAW_VAR_DIR="${TRIM_PKGVAR}"
+    QWENPAW_VENV="${TRIM_PKGVAR}/venv"
+    QWENPAW_BIN="${TRIM_PKGVAR}/venv/bin/qwenpaw"
+    QWENPAW_PIDFILE="${TRIM_PKGVAR}/qwenpaw.pid"
+    QWENPAW_LOG="${TRIM_PKGVAR}/qwenpaw.log"
+    QWENPAW_HOME_DIR="${TRIM_PKGHOME:-${TRIM_PKGVAR}/home}"
+    QWENPAW_PORT="${TRIM_SERVICE_PORT:-8088}"
+    qwenpaw_log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >>"${QWENPAW_LOG}" 2>/dev/null; }
+    qwenpaw_fail() { qwenpaw_log "ERROR: $*"; echo "QwenPaw：$*" >&2; }
+    qwenpaw_log_level() { printf 'info'; }
+fi
+
+pid_alive() { [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null; }
+
+current_pid() {
+    [ -r "${QWENPAW_PIDFILE}" ] && head -n1 "${QWENPAW_PIDFILE}" | tr -d '[:space:]'
+}
+
+start_process() {
+    local pid lvl
+    pid="$(current_pid)"
+    if pid_alive "${pid}"; then
+        qwenpaw_log "服务已在运行 (pid=${pid})"
+        return 0
+    fi
+    rm -f "${QWENPAW_PIDFILE}"
+
+    if [ ! -x "${QWENPAW_BIN}" ]; then
+        qwenpaw_fail "缺少可执行文件 ${QWENPAW_BIN}，请确认应用已安装完成"
+        return 1
+    fi
+
+    mkdir -p "${QWENPAW_VAR_DIR}" "${QWENPAW_HOME_DIR}" 2>/dev/null
+    touch "${QWENPAW_LOG}" 2>/dev/null
+
+    lvl="$(qwenpaw_log_level)"
+    qwenpaw_log "启动 QwenPaw (port=${QWENPAW_PORT}, log=${lvl})"
+
+    # QwenPaw 数据/配置统一放 HOME，保证可控
+    HOME="${QWENPAW_HOME_DIR}" "${QWENPAW_BIN}" app \
+        --host 127.0.0.1 --port "${QWENPAW_PORT}" --log-level "${lvl}" \
+        >>"${QWENPAW_LOG}" 2>&1 &
+
+    printf '%s' "$!" > "${QWENPAW_PIDFILE}"
+    sleep 2
+    if pid_alive "$!"; then
+        qwenpaw_log "QwenPaw 已启动 (pid=$!)"
+        return 0
+    fi
+    qwenpaw_fail "QwenPaw 启动失败，请查看日志 ${QWENPAW_LOG}"
+    return 1
+}
+
+stop_process() {
+    local pid count
+    qwenpaw_log "停止 QwenPaw ..."
+    pid="$(current_pid)"
+    if [ -z "${pid}" ]; then
+        rm -f "${QWENPAW_PIDFILE}"
+        return 0
+    fi
+    if ! pid_alive "${pid}"; then
+        rm -f "${QWENPAW_PIDFILE}"
+        qwenpaw_log "进程不存在，清理 pid 文件"
+        return 0
+    fi
+
+    kill -TERM "${pid}" >>"${QWENPAW_LOG}" 2>&1
+    count=0
+    while pid_alive "${pid}" && [ "${count}" -lt 15 ]; do
+        sleep 1
+        count=$((count + 1))
+    done
+    if pid_alive "${pid}"; then
+        kill -KILL "${pid}" 2>/dev/null
+        sleep 1
+    fi
+    rm -f "${QWENPAW_PIDFILE}"
+    qwenpaw_log "QwenPaw 已停止"
+    return 0
+}
+
+status() {
+    local pid
+    pid="$(current_pid)"
+    if pid_alive "${pid}"; then
+        return 0
+    fi
+    rm -f "${QWENPAW_PIDFILE}"
+    return 1
+}
+
+case $1 in
+start)
+    start_process
+    ;;
+stop)
+    stop_process
+    ;;
+status)
+    if status; then exit 0; else exit 3; fi
+    ;;
+*)
+    exit 1
+    ;;
+esac

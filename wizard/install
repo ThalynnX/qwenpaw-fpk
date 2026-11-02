@@ -1,0 +1,49 @@
+[
+    {
+        "stepTitle": "安装设置",
+        "items": [
+            {
+                "type": "tips",
+                "helpText": "QwenPaw 将基于 https://github.com/ThalynnX/qwenpaw 仓库源码安装：拉取源码 → 创建 Python 虚拟环境 → 安装依赖（PyPI）。依赖较多，安装耗时可能较长，进度条停滞属正常现象，请耐心等待。"
+            },
+            {
+                "type": "select",
+                "field": "wizard_pypi_source",
+                "label": "PyPI 安装源",
+                "helpText": "pip 安装依赖时使用的软件源，国内网络建议选择镜像源。",
+                "initValue": "aliyun",
+                "options": [
+                    {
+                        "label": "阿里云镜像源",
+                        "value": "aliyun"
+                    },
+                    {
+                        "label": "清华大学镜像源",
+                        "value": "tuna"
+                    },
+                    {
+                        "label": "官方源（PyPI）",
+                        "value": "official"
+                    }
+                ]
+            },
+            {
+                "type": "select",
+                "field": "wizard_log_level",
+                "label": "日志级别",
+                "helpText": "QwenPaw 运行日志的输出详细程度。",
+                "initValue": "info",
+                "options": [
+                    {
+                        "label": "Info - 常规信息（推荐）",
+                        "value": "info"
+                    },
+                    {
+                        "label": "Debug - 调试信息",
+                        "value": "debug"
+                    }
+                ]
+            }
+        ]
+    }
+]

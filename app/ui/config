@@ -1,0 +1,13 @@
+{
+    ".url": {
+        "qwenpaw.Application": {
+            "title": "QwenPaw",
+            "icon": "images/icon_256.png",
+            "type": "url",
+            "protocol": "http",
+            "port": "8088",
+            "url": "/",
+            "allUsers": false
+        }
+    }
+}

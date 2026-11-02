@@ -1,0 +1,18 @@
+appname = qwenpaw
+version = 2.2.3b1
+display_name = QwenPaw
+desc = 你的专属 AI 助理，部署在你自己（飞牛 fnOS / RK3566 ARM）的环境中。支持微信、QQ、钉钉、飞书、Discord、Telegram 等多通道对话，多智能体协作（独立配置、记忆和技能，互相通信完成复杂任务），定时执行任务，能力由 Skills 决定且可无限扩展，支持本地运行大模型完全离线工作，数据全在本地不依赖第三方托管，多层安全防护机制。<br>本应用基于 <a href="https://github.com/ThalynnX/qwenpaw">https://github.com/ThalynnX/qwenpaw</a> 仓库源码构建（源自 QwenPaw / Apache-2.0），由 ThalynnX 发布。<br>说明：安装时会联网拉取 Python 依赖（PyPI），耗时较长属正常现象；使用 Ollama 本地模型请先在飞牛应用商店安装 Ollama。
+platform = arm
+source = thirdparty
+os_min_version = 1.1.8
+maintainer = ThalynnX
+maintainer_url = https://github.com/ThalynnX/qwenpaw
+distributor = ThalynnX
+distributor_url = https://github.com/ThalynnX/qwenpaw
+desktop_uidir = ui
+desktop_applaunchname = qwenpaw.Application
+service_port = 8088
+checkport = true
+ctl_stop = true
+disable_authorization_path = true
+changelog = v2.2.3b1 基于 ThalynnX/qwenpaw 仓库源码构建的飞牛 fnOS 原生应用，适配 ARM（RK3566）。安装向导可选 PyPI 镜像源与日志级别。
