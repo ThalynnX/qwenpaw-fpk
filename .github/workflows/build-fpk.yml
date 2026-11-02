@@ -83,9 +83,9 @@ jobs:
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${VERSION}
+          tag_name: v${{ env.VERSION }}
           files: com.thalynnx.qwenpaw.fpk
-          name: QwenPaw v${VERSION} (fnOS fpk)
+          name: QwenPaw v${{ env.VERSION }} (fnOS fpk)
           body: |
             基于 ThalynnX/qwenpaw 源码自动编译的飞牛 fnOS 原生应用（非 Docker）。
 
