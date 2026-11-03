@@ -6,7 +6,7 @@ on:
     # 每日 03:00(UTC) / 11:00(北京时间) 自动拉取最新源码编译
     - cron: '0 3 * * *'
   push:
-    branches: [ main ]
+    branches: [ main, stable ]
     paths:
       - 'manifest'
       - 'cmd/**'
@@ -35,9 +35,9 @@ jobs:
           chmod +x /usr/local/bin/fnpack
           fnpack --help
 
-      - name: Fetch latest qwenpaw source from ThalynnX/qwenpaw
+      - name: Fetch stable qwenpaw source (v2.2.2.post1 稳定版分支)
         run: |
-          git clone --depth 1 https://github.com/ThalynnX/qwenpaw.git app/qwenpaw/code
+          git clone --depth 1 --branch stable https://github.com/ThalynnX/qwenpaw.git app/qwenpaw/code
           rm -rf app/qwenpaw/code/.git app/qwenpaw/code/e2e app/qwenpaw/code/.github
           VERSION=$(grep '__version__' app/qwenpaw/code/src/qwenpaw/__version__.py | sed -E 's/.*"([^"]+)".*/\1/')
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
