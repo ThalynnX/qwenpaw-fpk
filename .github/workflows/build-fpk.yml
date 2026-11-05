@@ -2,8 +2,10 @@ name: Build QwenPaw FPK (com.thalynnx.qwenpaw)
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [upstream-synced]
   schedule:
-    # 每日 03:00(UTC) / 11:00(北京时间) 自动拉取最新源码编译
+    # 每日 03:00 UTC (11:00 北京时间) 自动拉取最新源码编译
     - cron: '0 3 * * *'
   push:
     branches: [ main, stable ]
@@ -39,7 +41,7 @@ jobs:
           chmod +x /usr/local/bin/fnpack
           fnpack --help
 
-      - name: Fetch stable qwenpaw source (v2.2.2.post1 稳定版分支)
+      - name: Fetch stable qwenpaw source
         run: |
           git clone --depth 1 --branch stable https://github.com/ThalynnX/qwenpaw.git app/qwenpaw/code
           rm -rf app/qwenpaw/code/.git app/qwenpaw/code/e2e app/qwenpaw/code/.github
