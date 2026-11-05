@@ -15,6 +15,7 @@
     body { background: #171a1f; color: #e8eaed; }
     .card { background: #1f242b; border-color: #2b313a; }
     code { background: #2b313a; }
+    .badge { background: #1a3a5c; color: #6cb4ff; }
   }
   .wrap { max-width: 760px; margin: 0 auto; }
   .card {
@@ -35,15 +36,27 @@
   ul { margin: .4rem 0 .4rem 1.2rem; }
   a { color: #1664ff; text-decoration: none; }
   a:hover { text-decoration: underline; }
+  .btn {
+    display: inline-block; padding: .6rem 1.4rem; border-radius: 8px;
+    background: #1664ff; color: #fff; text-decoration: none; margin-top: .8rem;
+    font-size: .95rem;
+  }
+  .btn:hover { opacity: .9; }
   .footer { text-align: center; color: #98a2ad; font-size: .85rem; margin-top: 1.5rem; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>QwenPaw <span class="badge">v2.2.3b1</span></h1>
+    <h1>QwenPaw <span class="badge" id="version">v2.2.2</span></h1>
     <p>本地优先的个人 AI 助手 · 飞牛 fnOS 原生直装版（非 Docker）</p>
-    <p>本应用基于 AgentScope 团队开源的 QwenPaw（Apache-2.0）构建，由 <strong>ThalynnX</strong> 打包适配 fnOS。</p>
+  </div>
+
+  <div class="card">
+    <h2>快速入口</h2>
+    <p><strong>Web 控制台：</strong><a href="http://NAS:19091" target="_blank">http://NAS:19091</a></p>
+    <p><strong>管理控制台：</strong><a href="console.cgi">点这里打开管理控制台</a>（重置密码、重启服务、查看日志）</p>
+    <a class="btn" href="console.cgi">打开管理控制台</a>
   </div>
 
   <div class="card">
@@ -58,13 +71,8 @@
   </div>
 
   <div class="card">
-    <h2>开始使用</h2>
-    <p><strong>Web 控制台：</strong>点击应用中心中「QwenPaw」入口即可打开（地址 <code>http://NAS:19091</code>）。</p>
-    <p><strong>初始化：</strong>安装时已自动执行 <code>qwenpaw init</code>，默认配置可直接使用；如需修改渠道与模型，
-       在 NAS 终端执行：</p>
-    <p><code>docker</code> 无需——直接进入应用目录：<code>cd /var/apps/com.thalynnx.qwenpaw/target && sudo -u &lt;app用户&gt; /bin/bash -c "source ../home/venv/bin/activate &amp;&amp; python3 -m qwenpaw init"</code></p>
-    <p><strong>模型对接：</strong>Ollama 请先在应用商店安装 Ollama 应用，然后在控制台配置模型地址。</p>
-    <p><strong>数据位置：</strong>授权目录下的 <code>.qwenpaw</code>（卸载保留，重装可恢复）。</p>
+    <h2>忘记密码？</h2>
+    <p>打开<a href="console.cgi">管理控制台</a>，点击「重置密码」按钮，系统会自动清除认证数据并重启服务。之后打开 Web 控制台重新注册即可。</p>
   </div>
 
   <div class="card">

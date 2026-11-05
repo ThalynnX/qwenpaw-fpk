@@ -1,11 +1,16 @@
 #!/bin/bash
 
 ### QwenPaw 信息页静态文件服务（CGI）
-### 将 /cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi/xxx 映射到 www 目录
+### 支持 /console.cgi 管理控制台路由
 
 BASE_PATH="/var/apps/com.thalynnx.qwenpaw/target/www"
 
 URI_NO_QUERY="${REQUEST_URI%%\?*}"
+
+# 如果请求 console.cgi，转发到管理控制台 CGI
+if echo "$URI_NO_QUERY" | grep -q "console.cgi"; then
+    exec /var/apps/com.thalynnx.qwenpaw/target/ui/console.cgi
+fi
 
 REL_PATH="/"
 case "$URI_NO_QUERY" in
