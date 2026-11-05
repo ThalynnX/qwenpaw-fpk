@@ -78,7 +78,6 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build
           test -f dist/index.html && echo "console dist OK" || { echo "console build failed"; exit 1; }
-          # 清理 node_modules，避免打进安装包（只保留构建产物 dist）
           rm -rf node_modules
           echo "node_modules 已清理"
 
@@ -93,7 +92,6 @@ jobs:
       - name: Verify artifact
         run: |
           test -f com.thalynnx.qwenpaw.fpk
-          # 按日期命名，历史包互不覆盖
           cp com.thalynnx.qwenpaw.fpk com.thalynnx.qwenpaw-${DATE}.fpk
           echo "fpk OK (com.thalynnx.qwenpaw-${DATE}.fpk):"
           ls -la com.thalynnx.qwenpaw*.fpk
@@ -124,4 +122,5 @@ jobs:
             - 数据保存在授权目录 .qwenpaw，卸载保留。
             - 每个构建日期的包单独保留，按日期区分版本。
           generate_release_notes: false
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false
+          make_latest: false
