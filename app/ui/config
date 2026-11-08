@@ -1,19 +1,19 @@
 {
     ".url": {
         "com.thalynnx.qwenpaw.main": {
-            "title": "QwenPaw 控制台",
+            "title": "QwenPaw",
             "icon": "images/icon_{0}.png",
             "type": "iframe",
             "protocol": "http",
-            "url": "/cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi/console.cgi",
+            "port": "19091",
             "allUsers": true
         },
-        "com.thalynnx.qwenpaw.web": {
-            "title": "QwenPaw Web",
+        "com.thalynnx.qwenpaw.console": {
+            "title": "QwenPaw 控制台",
             "icon": "images/console_{0}.png",
             "type": "iframe",
             "protocol": "http",
-            "port": "19091",
+            "url": "/cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi/console.cgi",
             "allUsers": true
         }
     }
