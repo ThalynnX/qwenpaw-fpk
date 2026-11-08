@@ -561,92 +561,92 @@ else
     </div>
     "
 
-    # 两栏布局
-    echo '
-    <div class="two-col">
+    # 两栏布局 - 用双引号让变量展开
+    echo "
+    <div class=\"two-col\">
       <!-- 常用操作 -->
-      <div class="card">
-        <h3 style="margin-bottom:16px; font-size:16px;">⚡ 常用操作</h3>
-        <div class="action-list">
-          <div class="action-item">
-            <div class="action-left">
-              <div class="action-icon open">🌐</div>
+      <div class=\"card\">
+        <h3 style=\"margin-bottom:16px; font-size:16px;\">⚡ 常用操作</h3>
+        <div class=\"action-list\">
+          <div class=\"action-item\">
+            <div class=\"action-left\">
+              <div class=\"action-icon open\">🌐</div>
               <div>
-                <div class="action-title">打开 QwenPaw</div>
-                <div class="action-desc">访问 QwenPaw Web 界面</div>
+                <div class=\"action-title\">打开 QwenPaw</div>
+                <div class=\"action-desc\">访问 QwenPaw Web 界面</div>
               </div>
             </div>
-            <a href="http://NAS:19091" target="_blank" class="btn btn-primary">打开</a>
+            <a href=\"http://NAS:19091\" target=\"_blank\" class=\"btn btn-primary\">打开</a>
           </div>
-          <div class="action-item">
-            <div class="action-left">
-              <div class="action-icon restart">🔄</div>
+          <div class=\"action-item\">
+            <div class=\"action-left\">
+              <div class=\"action-icon restart\">🔄</div>
               <div>
-                <div class="action-title">重启服务</div>
-                <div class="action-desc">重启 QwenPaw 服务</div>
+                <div class=\"action-title\">重启服务</div>
+                <div class=\"action-desc\">重启 QwenPaw 服务</div>
               </div>
             </div>
-            <a href="?restart" class="btn btn-warning" onclick="return confirm('确定要重启服务吗？')">重启</a>
+            <a href=\"?restart\" class=\"btn btn-warning\" onclick=\"return confirm('确定要重启服务吗？')\">重启</a>
           </div>
-          <div class="action-item">
-            <div class="action-left">
-              <div class="action-icon log">📋</div>
+          <div class=\"action-item\">
+            <div class=\"action-left\">
+              <div class=\"action-icon log\">📋</div>
               <div>
-                <div class="action-title">查看日志</div>
-                <div class="action-desc">查看服务运行日志</div>
+                <div class=\"action-title\">查看日志</div>
+                <div class=\"action-desc\">查看服务运行日志</div>
               </div>
             </div>
-            <a href="?tab=logs" class="btn btn-secondary">查看</a>
+            <a href=\"?tab=logs\" class=\"btn btn-secondary\">查看</a>
           </div>
-          <div class="action-item">
-            <div class="action-left">
-              <div class="action-icon reset">🔑</div>
+          <div class=\"action-item\">
+            <div class=\"action-left\">
+              <div class=\"action-icon reset\">🔑</div>
               <div>
-                <div class="action-title">重置密码</div>
-                <div class="action-desc">重新设置账号密码</div>
+                <div class=\"action-title\">重置密码</div>
+                <div class=\"action-desc\">重新设置账号密码</div>
               </div>
             </div>
-            <a href="?reset_password" class="btn btn-warning" onclick="return confirm('确定要重置密码吗？这会删除当前认证数据，服务将重启。打开 QwenPaw 后需重新注册。')">重置</a>
+            <a href=\"?reset_password\" class=\"btn btn-warning\" onclick=\"return confirm('确定要重置密码吗？这会删除当前认证数据，服务将重启。打开 QwenPaw 后需重新注册。')\">重置</a>
           </div>
         </div>
       </div>
 
       <!-- 服务信息 -->
-      <div class="card">
-        <h3 style="margin-bottom:16px; font-size:16px;">📊 服务信息</h3>
-        <div class="service-info">
-          <div class="info-row">
-            <div class="info-row-icon">🔌</div>
-            <div class="info-row-content">
-              <div class="info-row-label">服务端口</div>
-              <div class="info-row-value">19091</div>
+      <div class=\"card\">
+        <h3 style=\"margin-bottom:16px; font-size:16px;\">📊 服务信息</h3>
+        <div class=\"service-info\">
+          <div class=\"info-row\">
+            <div class=\"info-row-icon\">🔌</div>
+            <div class=\"info-row-content\">
+              <div class=\"info-row-label\">服务端口</div>
+              <div class=\"info-row-value\">19091</div>
             </div>
           </div>
-          <div class="info-row">
-            <div class="info-row-icon">📁</div>
-            <div class="info-row-content">
-              <div class="info-row-label">工作目录</div>
-              <div class="info-row-value">应用文件/${APP_DIR}</div>
+          <div class=\"info-row\">
+            <div class=\"info-row-icon\">📁</div>
+            <div class=\"info-row-content\">
+              <div class=\"info-row-label\">工作目录</div>
+              <div class=\"info-row-value\">应用文件/${APP_DIR}</div>
             </div>
           </div>
-          <div class="info-row">
-            <div class="info-row-icon">🔐</div>
-            <div class="info-row-content">
-              <div class="info-row-label">认证状态</div>
-              <div class="info-row-value">'"${auth_status}"' 安全</div>
+          <div class=\"info-row\">
+            <div class=\"info-row-icon\">🔐</div>
+            <div class=\"info-row-content\">
+              <div class=\"info-row-label\">认证状态</div>
+              <div class=\"info-row-value\">${auth_status} 安全</div>
             </div>
           </div>
-          <div class="info-row">
-            <div class="info-row-icon">📦</div>
-            <div class="info-row-content">
-              <div class="info-row-label">当前版本</div>
-              <div class="info-row-value">${APP_VERSION}</div>
+          <div class=\"info-row\">
+            <div class=\"info-row-icon\">📦</div>
+            <div class=\"info-row-content\">
+              <div class=\"info-row-label\">当前版本</div>
+              <div class=\"info-row-value\">${APP_VERSION}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    '
+    "
 fi
 
 echo '
