@@ -10,6 +10,8 @@ LOG_FILE="${APP_VAR}/qwenpaw.log"
 APP_DIR="com.thalynnx.qwenpaw"
 APP_VERSION="$(grep -m1 '^version' /var/apps/com.thalynnx.qwenpaw/manifest 2>/dev/null | awk '{print $3}')"
 [ -z "$APP_VERSION" ] && APP_VERSION="2.3.0"
+LOG_TAIL="$(tail -n 100 "$LOG_FILE" 2>/dev/null | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')"
+[ -z "$LOG_TAIL" ] && LOG_TAIL="(暂无日志)"
 
 URI_NO_QUERY="${REQUEST_URI%%\?*}"
 BASE_PATH="/var/apps/com.thalynnx.qwenpaw/target/www"
@@ -193,6 +195,7 @@ body {
 }
 .info-row-label { font-size: 12px; color: var(--text2); }
 .info-row-value { font-size: 14px; font-weight: 500; }
+.logbox { background:#0d1117; color:#c9d1d9; padding:12px; border-radius:8px; font-size:12px; line-height:1.55; max-height:340px; overflow:auto; white-space:pre-wrap; word-break:break-all; font-family:ui-monospace,Menlo,Consolas,monospace; }
 .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
 .alert-success { background: #dcfce7; color: #166534; }
 .alert-warning { background: #fef3c7; color: #92400e; }
@@ -312,6 +315,11 @@ HTMLEOF
           </div>
         </div>
       </div>
+    </div>
+    <div class=\"card\">
+      <h3>📜 服务日志（最近 100 行）</h3>
+      <pre class=\"logbox\">${LOG_TAIL}</pre>
+      <div style=\"margin-top:10px\"><a class=\"btn btn-ghost\" href=\"/cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi?page=console\">刷新日志</a></div>
     </div>
     "
 
