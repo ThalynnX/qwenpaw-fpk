@@ -8,13 +8,14 @@ APP_VAR="/var/apps/com.thalynnx.qwenpaw/var"
 PID_FILE="${APP_VAR}/qwenpaw.pid"
 LOG_FILE="${APP_VAR}/qwenpaw.log"
 APP_DIR="com.thalynnx.qwenpaw"
-APP_VERSION="2.2.2.post1"
+APP_VERSION="$(grep -m1 '^version' /var/apps/com.thalynnx.qwenpaw/manifest 2>/dev/null | awk '{print $3}')"
+[ -z "$APP_VERSION" ] && APP_VERSION="2.3.0"
 
 URI_NO_QUERY="${REQUEST_URI%%\?*}"
 BASE_PATH="/var/apps/com.thalynnx.qwenpaw/target/www"
 
 # ============ 控制台模式 ============
-if echo "$URI_NO_QUERY" | grep -q "console"; then
+if echo "$REQUEST_URI" | grep -q "page=console" || echo "$URI_NO_QUERY" | grep -q "/index.cgi/console"; then
 
     find_auth_file() {
         local search_dirs="/vol1/@appshare/${APP_DIR}"
