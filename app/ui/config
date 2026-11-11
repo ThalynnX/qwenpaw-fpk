@@ -13,7 +13,7 @@
             "icon": "images/console_{0}.png",
             "type": "iframe",
             "protocol": "http",
-            "url": "/cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi/console.cgi",
+            "url": "/cgi/ThirdParty/com.thalynnx.qwenpaw/index.cgi?page=console",
             "allUsers": true
         }
     }
