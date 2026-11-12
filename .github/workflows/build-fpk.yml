@@ -1,11 +1,10 @@
-name: Build QwenPaw FPK (com.thalynnx.qwenpaw)
+name: Build QwenPaw (all platforms)
 
 on:
   workflow_dispatch:
   repository_dispatch:
     types: [upstream-synced]
   schedule:
-    # 每日 03:00 UTC (11:00 北京时间) 自动拉取最新源码编译
     - cron: '0 3 * * *'
   push:
     branches: [ main, stable ]
@@ -15,114 +14,247 @@ on:
       - 'wizard/**'
       - 'config/**'
       - 'app/**'
+      - 'Dockerfile'
+      - 'docker/**'
+      - 'packaging/**'
       - 'ICON.PNG'
       - 'ICON_256.PNG'
-      - 'LICENSE'
     tags:
       - 'v*'
 
 permissions:
   contents: write
+  packages: write
+
+env:
+  APP_ID: com.thalynnx.qwenpaw
+  IMAGE: ghcr.io/thalynnx/qwenpaw
 
 jobs:
-  build:
+  prepare:
+    name: 准备源码与控制台
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      date: ${{ steps.ver.outputs.date }}
     steps:
-      - name: Checkout build repo
-        uses: actions/checkout@v4
-
-      - name: Download fnpack
+      - uses: actions/checkout@v4
+      - name: 拉取上游 stable 源码
         run: |
-          for i in 1 2 3 4 5; do
-            curl -sL --connect-timeout 20 --max-time 300 https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-amd64 -o /usr/local/bin/fnpack && break
-            echo "第 ${i} 次下载失败，5 秒后重试..."
-            sleep 5
-          done
-          chmod +x /usr/local/bin/fnpack
-          fnpack --help
-
-      - name: Fetch stable qwenpaw source
+          git clone --depth 1 --branch stable https://github.com/ThalynnX/qwenpaw.git src
+          rm -rf src/.git src/e2e src/.github
+      - id: ver
         run: |
-          git clone --depth 1 --branch stable https://github.com/ThalynnX/qwenpaw.git app/qwenpaw/code
-          rm -rf app/qwenpaw/code/.git app/qwenpaw/code/e2e app/qwenpaw/code/.github
-          VERSION=$(grep '__version__' app/qwenpaw/code/src/qwenpaw/__version__.py | sed -E 's/.*"([^"]+)".*/\1/')
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "源码版本: ${VERSION}"
-
-      - name: Set build date (北京时间, 按日期隔开每天新包)
+          V=$(grep '__version__' src/src/qwenpaw/__version__.py | sed -E 's/.*"([^"]+)".*/\1/')
+          D=$(TZ=Asia/Shanghai date +%Y%m%d)
+          echo "源码版本: $V / $D"
+          echo "version=$V" >> $GITHUB_OUTPUT
+          echo "date=$D" >> $GITHUB_OUTPUT
+      - name: 构建 Web 控制台前端
         run: |
-          DATE=$(TZ=Asia/Shanghai date +%Y%m%d)
-          echo "DATE=${DATE}" >> $GITHUB_ENV
-          echo "构建日期: ${DATE}"
-
-      - name: Update manifest version & info page
-        run: |
-          sed -i "s/^version[[:space:]]*=.*/version                    = ${VERSION}/" manifest
-          sed -i "s/<span class=\"badge\">v[^<]*<\/span>/<span class=\"badge\">v${VERSION}<\/span>/" app/www/index.html
-          grep '^version' manifest
-          grep 'badge' app/www/index.html
-
-      - name: Validate shell scripts
-        run: |
-          for f in cmd/* app/ui/index.cgi; do
-            bash -n "$f" || { echo "Syntax error: $f"; exit 1; }
-          done
-
-      - name: Validate JSON
-        run: |
-          for j in config/privilege config/resource app/ui/config; do
-            python3 -c "import json; json.load(open('$j'))" || { echo "Invalid JSON: $j"; exit 1; }
-          done
-
-      - name: Build web console (预构建 Web 控制台)
-        run: |
-          cd app/qwenpaw/code/console
+          cd src/console
           npm ci --no-audit --no-fund
           npm run build
-          test -f dist/index.html && echo "console dist OK" || { echo "console build failed"; exit 1; }
+          test -f dist/index.html
           rm -rf node_modules
-          echo "node_modules 已清理"
+      - name: 整理产物目录
+        run: |
+          mkdir -p out
+          tar -czf out/source.tar.gz -C src .
+          tar -czf out/console-dist.tar.gz -C src/console dist
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prep
+          path: out/*
+          retention-days: 3
+          compression-level: 0
 
-      - name: Package app.tgz (source + ui + www)
+  fnos:
+    name: 飞牛 fnOS FPK
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 下载 fnpack
+        run: |
+          for i in 1 2 3 4 5; do
+            curl -sfL --connect-timeout 20 --max-time 300 https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-amd64 -o /usr/local/bin/fnpack && break
+            echo "第 ${i} 次失败，重试"; sleep 5
+          done
+          chmod +x /usr/local/bin/fnpack
+          fnpack --help | head -5
+      - uses: actions/download-artifact@v4
+        with:
+          name: prep
+          path: out
+      - name: 组装应用目录
+        run: |
+          mkdir -p app/qwenpaw/code
+          tar -xzf out/source.tar.gz -C app/qwenpaw/code
+          mkdir -p app/qwenpaw/code/console
+          tar -xzf out/console-dist.tar.gz -C app/qwenpaw/code/console
+          sed -i "s/^version[[:space:]]*=.*/version                    = ${{ needs.prepare.outputs.version }}/" manifest
+          grep '^version' manifest
+      - name: 校验脚本与 JSON
+        run: |
+          for f in cmd/* app/ui/index.cgi packaging/*.sh; do bash -n "$f" || { echo "语法错误: $f"; exit 1; }; done
+          for j in config/privilege config/resource app/ui/config; do python3 -c "import json;json.load(open('$j'))" || exit 1; done
+      - name: 打包 FPK（双架构命名）
         run: |
           tar -czf app.tgz -C app .
-          ls -la app.tgz
+          fnpack build
+          D=${{ needs.prepare.outputs.date }}
+          for A in x86_64 arm64; do cp com.thalynnx.qwenpaw.fpk "${APP_ID}-${D}-${A}.fpk"; done
+          cp com.thalynnx.qwenpaw.fpk "${APP_ID}-${D}.fpk"
+          ls -la *.fpk
+          for f in *.fpk; do tar -tzf "$f" >/dev/null || { echo "包损坏: $f"; exit 1; }; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fpk
+          path: '*.fpk'
+          retention-days: 3
+          compression-level: 0
 
-      - name: Build FPK
-        run: fnpack build
-
-      - name: Verify artifact
+  docker:
+    name: Docker 多架构镜像
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: prep
+          path: out
+      - name: 组装构建上下文
         run: |
-          test -f com.thalynnx.qwenpaw.fpk
-          cp com.thalynnx.qwenpaw.fpk com.thalynnx.qwenpaw-${DATE}.fpk
-          echo "fpk OK (com.thalynnx.qwenpaw-${DATE}.fpk):"
-          ls -la com.thalynnx.qwenpaw*.fpk
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+          mkdir -p ctx/code
+          tar -xzf out/source.tar.gz -C ctx/code
+          mkdir -p ctx/code/console
+          tar -xzf out/console-dist.tar.gz -C ctx/code/console
+          cp Dockerfile ctx/Dockerfile
+          cp docker/docker-entrypoint.sh ctx/docker-entrypoint.sh
+          ls ctx
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
-          name: com.thalynnx.qwenpaw-fpk-${{ env.DATE }}
-          path: com.thalynnx.qwenpaw-*.fpk
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
         with:
-          tag_name: v${{ env.VERSION }}
-          files: com.thalynnx.qwenpaw-${{ env.DATE }}.fpk
-          name: QwenPaw v${{ env.VERSION }} (fnOS fpk)
+          context: ctx
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/thalynnx/qwenpaw:${{ needs.prepare.outputs.version }}
+            ghcr.io/thalynnx/qwenpaw:latest
+
+  linux-tar:
+    name: 通用 Linux 包
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: prep
+          path: out
+      - name: 打包
+        run: |
+          ARCH=${{ matrix.arch }}
+          mkdir -p pkg/qwenpaw-${ARCH}
+          mkdir -p pkg/qwenpaw-${ARCH}/code
+          tar -xzf out/source.tar.gz -C pkg/qwenpaw-${ARCH}/code
+          mkdir -p pkg/qwenpaw-${ARCH}/console
+          tar -xzf out/console-dist.tar.gz -C pkg/qwenpaw-${ARCH}/console
+          cp packaging/install.sh packaging/uninstall.sh pkg/qwenpaw-${ARCH}/
+          chmod +x pkg/qwenpaw-${ARCH}/*.sh
+          mkdir -p dist
+          tar -czf "dist/qwenpaw-${{ needs.prepare.outputs.version }}-linux-${ARCH}.tar.gz" -C pkg "qwenpaw-${ARCH}"
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tar-${{ matrix.arch }}
+          path: dist/*
+          retention-days: 3
+          compression-level: 0
+
+  deb:
+    name: Debian 包
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: prep
+          path: out
+      - name: 出 deb
+        run: |
+          ARCH=${{ matrix.arch }}
+          mkdir -p stage/code
+          tar -xzf out/source.tar.gz -C stage/code
+          mkdir -p stage/console
+          tar -xzf out/console-dist.tar.gz -C stage/console
+          cp packaging/install.sh packaging/uninstall.sh stage/
+          chmod +x packaging/build-deb.sh
+          bash packaging/build-deb.sh "${{ needs.prepare.outputs.version }}" "${ARCH}" "$PWD/stage" "$PWD/dist"
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.arch }}
+          path: dist/*
+          retention-days: 3
+          compression-level: 0
+
+  release:
+    name: 发布全部产物
+    needs: [prepare, fnos, docker, linux-tar, deb]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: 汇总
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.fpk' -o -name '*.deb' -o -name 'qwenpaw-*-linux-*.tar.gz' \) -exec cp {} release/ \;
+          ls -la release
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.prepare.outputs.version }}
+          name: QwenPaw v${{ needs.prepare.outputs.version }}（全平台）
+          files: release/*
+          fail_on_unmatched_files: false
+          make_latest: true
+          generate_release_notes: false
           body: |
-            基于 ThalynnX/qwenpaw 源码自动编译的飞牛 fnOS 原生应用（非 Docker）。
+            由 ThalynnX 自动编译发布，覆盖飞牛 fnOS、Docker、通用 Linux、Debian 四类平台。
 
-            ## 安装
-            - 下载本 Release 中**日期最新**的 com.thalynnx.qwenpaw-YYYYMMDD.fpk 安装。
-            - 安装时自动创建 Python 虚拟环境并从本地源码安装依赖（无需联网拉源码）。
-            - 依赖飞牛应用商店的 **Node.js v24** 与 **Python 3.12** 运行时（自动安装）。
+            | 文件 | 用途 |
+            | --- | --- |
+            | `com.thalynnx.qwenpaw-*-x86_64.fpk` | 飞牛 fnOS（x86_64）原生应用 |
+            | `com.thalynnx.qwenpaw-*-arm64.fpk` | 飞牛 fnOS（ARM64：RK3566 / N1 等） |
+            | `ghcr.io/thalynnx/qwenpaw:<版本>` | Docker 多架构镜像（amd64/arm64），群晖、威联通、N1 通用 |
+            | `qwenpaw-*-linux-amd64.tar.gz` / `-arm64.tar.gz` | 通用 Linux：解压后 `sudo bash install.sh` |
+            | `qwenpaw_*_amd64.deb` / `_arm64.deb` | Debian/Ubuntu/Armbian：`sudo apt install ./*.deb` |
+
+            ## 速查
+            - 飞牛：应用中心 → 手动安装 → 选对应架构 fpk
+            - Docker：`docker run -d -p 19091:19091 -v /vol1/qwenpaw:/data ghcr.io/thalynnx/qwenpaw:latest`
+            - Debian：`sudo apt install ./qwenpaw_<版本>_<架构>.deb`
+            - 通用：`tar -xzf qwenpaw-<版本>-linux-<架构>.tar.gz && cd qwenpaw-* && sudo bash install.sh`
 
             ## 说明
-            - 应用标识：com.thalynnx.qwenpaw，独立应用，不影响社区包。
-            - Web 控制台：安装后从应用中心「QwenPaw」入口打开（http://NAS:19091）。
-            - 数据保存在授权目录 .qwenpaw，卸载保留。
-            - 每个构建日期的包单独保留，按日期区分版本。
-          generate_release_notes: false
-          fail_on_unmatched_files: false
-          make_latest: false
+            - 数据目录：飞牛在 `@appshare/com.thalynnx.qwenpaw`，其它平台 `/var/lib/qwenpaw/.qwenpaw`，卸载保留。
+            - 保留上游 Apache-2.0 许可与版权声明，未做删改。
