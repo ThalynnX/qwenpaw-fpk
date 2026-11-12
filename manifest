@@ -1,7 +1,7 @@
 appname                    = com.thalynnx.qwenpaw
 version                    = 2.2.2.post1
 display_name               = QwenPaw
-desc                       = <p>QwenPaw 是 AgentScope 团队开源的本地优先个人 AI 助手（Apache-2.0），本包由 <a href="https://github.com/ThalynnX/qwenpaw" target="_blank">ThalynnX</a> 基于 ThalynnX/qwenpaw 源码打包适配 fnOS，部署在你自己的环境中。</p><h3>核心功能</h3><p>多通道对话（飞书、钉钉、QQ、Discord、Telegram、微信等），多智能体协作（独立配置、记忆和技能，互相通信完成复杂任务），定时执行任务，能力由 Skills 决定且可无限扩展，支持对接本地 Ollama 完全离线工作，数据全在本地不依赖第三方托管，多层安全防护机制。<br>使用 Ollama 需先在飞牛应用商店安装 Ollama 应用。更多信息见 <a href="https://qwenpaw.agentscope.io" target="_blank">QwenPaw 官方文档</a>。</p>
+desc                       = <p>QwenPaw 是一款本地优先的个人 AI 助手（Apache-2.0 许可），本包由 <a href="https://github.com/ThalynnX/qwenpaw" target="_blank">ThalynnX</a> 编译发布并适配 fnOS，数据全部保存在本地。核心功能：多通道对话（飞书、钉钉、QQ、Discord、Telegram、微信等），多智能体协作（独立配置、记忆和技能），定时任务，Skills 可无限扩展，支持对接本地 Ollama 离线运行，并内置独立管理控制台（重置密码 / 重启服务 / 查看日志）。</p>
 platform                   = all
 source                     = thirdparty
 maintainer                 = ThalynnX
@@ -15,5 +15,5 @@ checkport                  = false
 service_port               = 19091
 disable_authorization_path = false
 install_dep_apps           = nodejs_v24:python312
-changelog                  = 基于 ThalynnX/qwenpaw stable 分支 v2.2.2.post1 自动编译（原生直装，非 Docker）。内置独立管理控制台（重置密码、重启服务、查看日志）。
+changelog                  = 由 ThalynnX 基于 stable 分支自动编译（原生直装，非 Docker），内置独立管理控制台（重置密码、重启服务、查看日志）。
 checksum                   = 0f35001076c6b8423924e19d919c6fc0
