@@ -58,3 +58,14 @@ curl -sL https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-amd64 -o fnpack && 
 - 应用标识：`com.thalynnx.qwenpaw`（独立应用，不影响社区包）
 - 版本号：随 ThalynnX/qwenpaw 源码 `__version__` 自动更新
 - 发布者：ThalynnX
+
+## 全平台产物矩阵（每日 03:00 UTC 自动编译）
+
+| 平台 | 产物 | 架构 |
+| --- | --- | --- |
+| 飞牛 fnOS | `com.thalynnx.qwenpaw-<日期>-x86_64.fpk` / `-arm64.fpk` | x86_64、ARM64（RK3566 / N1 等） |
+| Docker | `ghcr.io/thalynnx/qwenpaw:<版本>` 与 `:latest` | linux/amd64、linux/arm64 |
+| 通用 Linux | `qwenpaw-<版本>-linux-amd64.tar.gz` / `-arm64.tar.gz` | x86_64、ARM64（解压后 `sudo bash install.sh`） |
+| Debian | `qwenpaw_<版本>_amd64.deb` / `_arm64.deb` | amd64、arm64（`sudo apt install ./*.deb`） |
+
+群晖 DSM、威联通 QTS 走 Docker 镜像部署（两家原生 SPK / QPKG 需要厂商 SDK 工具链，暂未纳入 CI）。
